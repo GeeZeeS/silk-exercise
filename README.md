@@ -66,3 +66,16 @@ docker compose up
 ### Health Check
 
 - `GET /health` - Check API and database connection status
+
+### Hosts Dashboard
+
+- `GET /` - Preview extracted and merged data
+
+## Screenshots
+
+### Dashboard Overview
+![Hosts Dashboard Overview](images/index_page.png)
+
+### Host Information
+![Detailed Host Information](images/host_info.png)
+

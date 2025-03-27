@@ -231,19 +231,27 @@
                     <div class="col-md-4">
                         <div class="form-group">
                             <label for="operating_system">Operating System:</label>
-                            <input type="text" class="form-control" id="operating_system" name="operating_system">
+                            <select class="form-control" id="operating_system" name="operating_system">
+                                <option value="">All Operating Systems</option>
+                                <option value="Windows">Windows</option>
+                                <option value="Linux">Linux</option>
+                                <option value="macOS">macOS</option>
+                                <option value="Unix">Unix</option>
+                            </select>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="form-group">
-                            <label for="days">Active Days Threshold:</label>
-                            <input type="number" class="form-control" id="days" name="days" value="30" min="1" max="365">
+                            <div class="form-check mt-4">
+                                <input type="checkbox" class="form-check-input" id="is_old" name="is_old" checked>
+                                <label class="form-check-label" for="is_old">Show only hosts not seen in last 30 days</label>
+                            </div>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="form-group">
                             <label for="limit">Result Limit:</label>
-                            <input type="number" class="form-control" id="limit" name="limit" value="100" min="10" max="1000" step="10">
+                            <input type="number" class="form-control" id="limit" name="limit" value="100" min="1">
                         </div>
                     </div>
                 </div>
@@ -302,8 +310,8 @@
         let hostData = [];
         let rawHostData = [];  // Store the original full host data for details modal
         let currentFilters = {
-            os: '',
-            days: 30,
+            operating_system: '',
+            is_old: true,
             limit: 100
         };
 
@@ -319,8 +327,8 @@
             try {
                 // Build query string from current filters
                 const params = new URLSearchParams();
-                if (currentFilters.os) params.append('os', currentFilters.os);
-                if (currentFilters.days) params.append('days', currentFilters.days);
+                if (currentFilters.operating_system) params.append('operating_system', currentFilters.operating_system);
+                if (currentFilters.is_old !== undefined) params.append('is_old', currentFilters.is_old);
                 if (currentFilters.limit) params.append('limit', currentFilters.limit);
                 
                 const queryString = params.toString() ? `?${params.toString()}` : '';
@@ -917,8 +925,8 @@
             event.preventDefault();
             
             // Update current filters
-            currentFilters.os = document.getElementById('operating_system').value;
-            currentFilters.days = document.getElementById('days').value;
+            currentFilters.operating_system = document.getElementById('operating_system').value;
+            currentFilters.is_old = document.getElementById('is_old').checked;
             currentFilters.limit = document.getElementById('limit').value;
             
             // Reload data with new filters
@@ -934,12 +942,12 @@
         document.querySelector('button[type="reset"]').addEventListener('click', function() {
             // Reset the form and current filters
             document.getElementById('operating_system').value = '';
-            document.getElementById('days').value = '30';
+            document.getElementById('is_old').checked = true;
             document.getElementById('limit').value = '100';
             
             currentFilters = {
-                os: '',
-                days: 30,
+                operating_system: '',
+                is_old: true,
                 limit: 100
             };
             

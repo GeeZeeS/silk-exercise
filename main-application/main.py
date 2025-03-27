@@ -81,16 +81,10 @@ async def health_check(db: AsyncIOMotorDatabase = Depends(get_database)):
         )
 
 
-@app.get("/index.html", response_class=HTMLResponse, tags=["UI"])
-async def index(request: Request):
-    """Serve the index.html template"""
-    return templates.TemplateResponse("index.html", {"request": request})
-
-
-@app.get("/", tags=["UI"])
-async def root():
+@app.get("/", response_class=HTMLResponse, tags=["UI"])
+async def root(request: Request):
     """Redirect to the index.html page"""
-    return RedirectResponse(url="/index.html")
+    return templates.TemplateResponse("index.html", {"request": request})
 
 
 app.include_router(api_router, prefix="/api")
