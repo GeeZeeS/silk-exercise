@@ -10,7 +10,7 @@ from api import router as api_router
 from core.config import settings
 from core.database import db_instance, get_database
 
-# Configure logging
+
 logging.basicConfig(
     level=logging.INFO if not settings.is_production else logging.WARNING,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -34,15 +34,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 @app.on_event("startup")
 async def startup_db_client():
     """Connect to database when app starts"""
     await db_instance.connect_to_database()
 
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     """Close database connection when app shuts down"""
     await db_instance.close_database_connection()
+
 
 @app.get("/health", tags=["Health"])
 async def health_check(db: AsyncIOMotorDatabase = Depends(get_database)):
@@ -56,8 +59,8 @@ async def health_check(db: AsyncIOMotorDatabase = Depends(get_database)):
                 "status": "healthy",
                 "database": "connected",
                 "version": "0.1.0",
-                "environment": settings.environment
-            }
+                "environment": settings.environment,
+            },
         )
     except Exception as e:
         return JSONResponse(
@@ -65,8 +68,9 @@ async def health_check(db: AsyncIOMotorDatabase = Depends(get_database)):
             content={
                 "status": "unhealthy",
                 "database": "disconnected",
-                "error": str(e)
-            }
+                "error": str(e),
+            },
         )
+
 
 app.include_router(api_router, prefix="/api")

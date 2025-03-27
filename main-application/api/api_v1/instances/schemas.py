@@ -3,7 +3,7 @@ from datetime import datetime
 from bson import ObjectId
 from pydantic import BaseModel, Field, ConfigDict
 
-from core.instances.schemas import PydanticObjectId
+from core.security.schemas import PydanticObjectId
 
 
 class Account(BaseModel):
@@ -84,6 +84,7 @@ class Tag(BaseModel):
 
 class HostAsset(BaseModel):
     """Host asset model with all details"""
+
     model_config = ConfigDict(
         populate_by_name=True,
         arbitrary_types_allowed=True,
@@ -94,9 +95,9 @@ class HostAsset(BaseModel):
                 "name": "ip-172-31-19-223.ec2.internal",
                 "os": "Amazon Linux 2",
             }
-        }
+        },
     )
-    
+
     id: PydanticObjectId = Field(default_factory=ObjectId, alias="_id")
     asset_id: int
     address: str
@@ -136,11 +137,12 @@ class HostAsset(BaseModel):
 
 class HostAssetResponse(BaseModel):
     """Simplified host asset response model"""
+
     model_config = ConfigDict(
         populate_by_name=True,
         arbitrary_types_allowed=True,
     )
-    
+
     id: str = Field(..., alias="_id")
     asset_id: int
     address: str
@@ -153,12 +155,13 @@ class HostAssetResponse(BaseModel):
 
 class SearchParams(BaseModel):
     """Search parameters for filtering hosts"""
+
     asset_id: Optional[int] = None
     address: Optional[str] = None
     name: Optional[str] = None
     os: Optional[str] = None
     cloudProvider: Optional[str] = None
-    
+
     def to_query(self) -> Dict[str, Any]:
         """Convert search parameters to MongoDB query"""
         query = {}
@@ -170,3 +173,12 @@ class SearchParams(BaseModel):
             else:
                 query[field] = value
         return query
+
+
+class TaskResponse(BaseModel):
+    """Response model for task submission"""
+
+    status: str = "submitted"
+    task_id: Optional[str] = None
+    message: str
+    result: Optional[Dict[str, Any]] = None

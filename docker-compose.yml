@@ -10,9 +10,46 @@ services:
       - .env
     depends_on:
       - mongo
+      - redis
     ports:
       - "8000:8000"
     restart: unless-stopped
+
+  celery_worker:
+    container_name: celery_worker
+    build: ./main-application
+    volumes:
+      - ./main-application:/main-application
+    env_file:
+      - .env
+    depends_on:
+      - mongo
+      - redis
+    command: celery -A core.celery_app worker --loglevel=info
+    restart: unless-stopped
+
+  celery_beat:
+    container_name: celery_beat
+    build: ./main-application
+    volumes:
+      - ./main-application:/main-application
+    env_file:
+      - .env
+    depends_on:
+      - mongo
+      - redis
+      - celery_worker
+    command: celery -A core.celery_app beat --loglevel=info
+    restart: unless-stopped
+
+  redis:
+    container_name: redis_instance
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
 
   mongo:
     container_name: mongo_db
@@ -32,3 +69,4 @@ services:
 
 volumes:
   mongo-data:
+  redis-data:
