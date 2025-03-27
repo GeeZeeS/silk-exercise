@@ -17,7 +17,7 @@ class ApiConfig(BaseModel):
     """Api configuration"""
 
     api_url: str = Field(default=os.environ.get("API_BASE_URL", ""))
-    api_key: str = Field(default=os.environ.get("API_KEY", ""))
+    api_key: str = Field(default=os.environ.get("API_TOKEN", ""))
 
 
 class Settings(BaseModel):
