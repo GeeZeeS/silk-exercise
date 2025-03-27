@@ -29,7 +29,6 @@ class Database:
         return f"mongodb://{host}:{port}/{database}"
 
     async def connect_to_database(self) -> None:
-        """Connect to MongoDB database"""
         if self.client is not None:
             return
 
@@ -39,8 +38,7 @@ class Database:
         logger.info(f"Connecting to MongoDB at {settings.db.host}:{settings.db.port}")
         try:
             self.client = AsyncIOMotorClient(mongo_url)
-            # Force a connection to verify it works
-            await self.client.admin.command('ping')
+            await self.client.admin.command("ping")
             self.db = self.client[db_name]
             logger.info("Connected to MongoDB successfully")
         except Exception as e:
@@ -58,7 +56,6 @@ class Database:
         logger.info("Closed MongoDB connection")
 
 
-# Create a database instance
 db_instance = Database()
 
 

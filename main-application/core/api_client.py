@@ -8,40 +8,20 @@ from requests import HTTPError
 logger = logging.getLogger(__name__)
 
 
-class SilkSecurityApiClient:
+class SilkApiClient:
     """Client for fetching security data from APIs"""
 
     def __init__(
         self,
-        base_url: str = "https://api.recruiting.app.silk.security",
-        token: str = None,
+        base_url: str,
+        token: str,
     ):
-        """
-        Initialize the API client
-
-        Args:
-            base_url: Base URL for the API
-            token: API token for authentication
-        """
         self.base_url = base_url
-        self.token = token
         self.headers = {"accept": "application/json", "token": token}
 
     def _make_request(
         self, endpoint: str, method: str = "GET", params: Dict = None, data: Any = None
     ) -> Dict:
-        """
-        Make a request to the API
-
-        Args:
-            endpoint: API endpoint
-            method: HTTP method (GET, POST, etc.)
-            params: Query parameters
-            data: Request body data
-
-        Returns:
-            Response data
-        """
         url = urljoin(self.base_url, endpoint)
         try:
             if method.upper() == "GET":
@@ -63,7 +43,7 @@ class SilkSecurityApiClient:
         endpoint = f"/api/{host_type}/hosts/get"
         params = {"skip": skip, "limit": limit}
 
-        logger.info(f"Fetching CrowdStrike hosts (skip={skip}, limit={limit})")
+        logger.info(f"Fetching {host_type} hosts (skip={skip}, limit={limit})")
         try:
             data = self._make_request(endpoint, method="POST", params=params, data={})
         except HTTPError as e:
@@ -72,16 +52,6 @@ class SilkSecurityApiClient:
         return data
 
     def fetch_all_hosts(self, max_records: int = 100) -> Dict[str, List[Dict]]:
-        """
-        Fetch both CrowdStrike and Qualys host data
-
-        Args:
-            max_records: Maximum number of records to fetch from each API
-
-        Returns:
-            Dictionary with CrowdStrike and Qualys host data
-        """
-
         crowdstrike_hosts = []
         qualys_hosts = []
 

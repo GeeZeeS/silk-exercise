@@ -13,10 +13,18 @@ class DatabaseConfig(BaseModel):
     database: str = Field(default=os.environ.get("MONGODB_DB", "silk_db"))
 
 
+class ApiConfig(BaseModel):
+    """Api configuration"""
+
+    api_url: str = Field(default=os.environ.get("API_URL", ""))
+    api_key: str = Field(default=os.environ.get("API_KEY", ""))
+
+
 class Settings(BaseModel):
     """Application settings"""
 
     db: DatabaseConfig = Field(default_factory=DatabaseConfig)
+    api: ApiConfig = Field(default_factory=ApiConfig)
     app_name: str = Field(default=os.environ.get("APP_NAME", "Silk Exercise"))
     environment: str = Field(default=os.environ.get("ENVIRONMENT", "development"))
 

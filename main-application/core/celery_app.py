@@ -22,19 +22,11 @@ celery_app.conf.update(
     broker_connection_retry_on_startup=True,
 )
 
-api_token = os.getenv("API_TOKEN")
-if api_token:
-    celery_app.conf.beat_schedule = {
-        # Run security data sync daily at 2am UTC
-        "daily-security-data-sync": {
-            "task": "core.tasks.scheduled_security_data_sync",
-            "schedule": crontab(hour="2", minute="0"),
-            "args": (api_token, 1000),
-        },
-        # Run a smaller sync every 6 hours to catch recent changes
-        "hourly-security-data-sync": {
-            "task": "core.tasks.scheduled_security_data_sync",
-            "schedule": crontab(hour="*/6"),
-            "args": (api_token, 100),
-        },
-    }
+celery_app.conf.beat_schedule = {
+    # Run sync every 4 hours to catch recent changes
+    "hourly-security-data-sync": {
+        "task": "core.tasks.fetch_and_process_hosts_data",
+        "schedule": crontab(hour="*/4"),
+        "args": (100,),
+    },
+}
