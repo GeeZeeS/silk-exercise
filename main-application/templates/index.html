@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Host Details Dashboard</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.3.6/css/buttons.dataTables.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.3.6/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.html5.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f7fa;
+            color: #333;
+        }
+
+        .dashboard {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #7f8c8d;
+            margin: 0;
+        }
+
+        .filter-section {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .table-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            color: #7f8c8d;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .btn-refresh {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 15px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .btn-refresh:hover {
+            background-color: #2980b9;
+        }
+
+        .export-button {
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 12px;
+            cursor: pointer;
+            margin-left: 10px;
+            font-size: 14px;
+        }
+
+        .export-csv {
+            background-color: #27ae60;
+        }
+
+        .export-csv:hover {
+            background-color: #219653;
+        }
+        
+        .loading::after {
+            content: "";
+            animation: ellipsis 1.5s infinite;
+        }
+        
+        @keyframes ellipsis {
+            0% { content: ""; }
+            25% { content: "."; }
+            50% { content: ".."; }
+            75% { content: "..."; }
+        }
+
+        .host-details-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .host-details-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 1200px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #7f8c8d;
+            cursor: pointer;
+        }
+
+        .detail-section {
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .detail-section h4 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .detail-item {
+            margin-bottom: 8px;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #34495e;
+        }
+
+        .nested-table {
+            width: 100%;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            border-collapse: collapse;
+        }
+
+        .nested-table th, .nested-table td {
+            padding: 8px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        .nested-table th {
+            background-color: #f2f2f2;
+            font-weight: 600;
+        }
+
+        #hostsTable tbody tr {
+            cursor: pointer;
+        }
+
+        #hostsTable tbody tr:hover {
+            background-color: #f0f7fb !important;
+        }
+
+        .show-more-btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 15px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background-color 0.3s;
+        }
+
+        .show-more-btn:hover {
+            background-color: #2980b9;
+        }
+
+        .hidden-rows {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dashboard">
+        <div class="header">
+            <h1>Host Details Dashboard</h1>
+            <p>Interactive dashboard of host data</p>
+        </div>
+
+        <div class="filter-section">
+            <form id="filter-form">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="operating_system">Operating System:</label>
+                            <input type="text" class="form-control" id="operating_system" name="operating_system">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="days">Active Days Threshold:</label>
+                            <input type="number" class="form-control" id="days" name="days" value="30" min="1" max="365">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="limit">Result Limit:</label>
+                            <input type="number" class="form-control" id="limit" name="limit" value="100" min="10" max="1000" step="10">
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12 text-center">
+                        <button type="submit" class="btn btn-primary">Apply Filters</button>
+                        <button type="reset" class="btn btn-secondary">Reset</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="table-container">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3 class="mb-0">Host Details</h3>
+                <div>
+                    <span id="result-count" class="me-3">0 hosts found</span>
+                    <button class="btn-refresh" id="refreshData">Refresh Data</button>
+                </div>
+            </div>
+            <table class="table table-striped" id="hostsTable">
+                <thead>
+                    <tr>
+                        <th>Hostname</th>
+                        <th>IP Address</th>
+                        <th>Operating System</th>
+                        <th>Last Seen</th>
+                        <th>Vulnerabilities</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Table rows will be populated via JavaScript -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="footer">
+            <p id="data-updated">Data last updated: Loading...</p>
+        </div>
+    </div>
+
+    <!-- Host Details Modal -->
+    <div id="hostDetailsModal" class="host-details-modal">
+        <div class="host-details-content">
+            <span class="close-modal" id="closeModal">&times;</span>
+            <h2 id="modalHostname">Host Details</h2>
+            <div id="hostDetailsContent">
+                <!-- Host details will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let hostsTable;
+        let hostData = [];
+        let rawHostData = [];  // Store the original full host data for details modal
+        let currentFilters = {
+            os: '',
+            days: 30,
+            limit: 100
+        };
+
+        // Function to format the date
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            return date.toISOString().split('T')[0]; // YYYY-MM-DD format
+        }
+
+        // Function to fetch data from API
+        async function fetchData() {
+            try {
+                // Build query string from current filters
+                const params = new URLSearchParams();
+                if (currentFilters.os) params.append('os', currentFilters.os);
+                if (currentFilters.days) params.append('days', currentFilters.days);
+                if (currentFilters.limit) params.append('limit', currentFilters.limit);
+                
+                const queryString = params.toString() ? `?${params.toString()}` : '';
+                
+                // Show loading state
+                showLoading(true);
+                
+                // Make the API request to fetch host data
+                const response = await fetch(`/api/v1/hosts/${queryString}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                alert('Failed to fetch data from the API. Please try again later.');
+                return null;
+            } finally {
+                // Hide loading state
+                showLoading(false);
+            }
+        }
+
+        // Function to show/hide loading indicators
+        function showLoading(isLoading) {
+            const loadingElements = ['data-updated'];
+            
+            loadingElements.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    if (isLoading) {
+                        element.classList.add('loading');
+                        element.setAttribute('data-original', element.textContent);
+                        element.textContent = 'Loading...';
+                    } else {
+                        element.classList.remove('loading');
+                        if (element.hasAttribute('data-original')) {
+                            element.textContent = element.getAttribute('data-original');
+                            element.removeAttribute('data-original');
+                        }
+                    }
+                }
+            });
+            
+            // Disable buttons during loading
+            document.querySelectorAll('button').forEach(button => {
+                button.disabled = isLoading;
+            });
+        }
+
+        // Function to update the dashboard with new data
+        function updateDashboard(data) {
+            if (!data || data.status !== "success") {
+                console.error("API response error:", data);
+                alert("Error loading data: Invalid response format");
+                return;
+            }
+            
+            // Extract hosts array from response
+            const hosts = data.hosts || [];
+            
+            // Store the raw host data for details modal
+            rawHostData = hosts;
+            
+            // Update result count
+            document.getElementById('result-count').textContent = `${hosts.length} hosts found`;
+            
+            // Update last updated time
+            const now = new Date();
+            document.getElementById('data-updated').textContent = `Data last updated: ${now.toISOString().replace('T', ' ').substr(0, 19)} UTC`;
+            
+            // Update host data for DataTable - transform hosts to simpler format for table
+            hostData = hosts.map(host => transformHostForTable(host));
+            
+            // Update or initialize the host details table
+            updateHostsTable();
+        }
+
+        // Function to transform host object for the DataTable
+        function transformHostForTable(host) {
+            return {
+                hostname: host.name || host.fqdn || host.dns_host_name || 'N/A',
+                ip: host.address || extractFirstIP(host.network_interface) || 'N/A',
+                os: host.os || 'N/A',
+                last_seen: host.last_seen || host.modified || host.agent_info?.last_checked_in || 'N/A',
+                vulnerabilities: host.vuln?.list?.length || 0,
+                _id: host.id || host.device_id || host.host_id // Store an identifier to find the full host object later
+            };
+        }
+
+        // Helper function to extract first IP from network interfaces
+        function extractFirstIP(networkInterface) {
+            if (!networkInterface || !networkInterface.list || !networkInterface.list.length) return '';
+            
+            for (const iface of networkInterface.list) {
+                if (iface.host_asset_interface && iface.host_asset_interface.address) {
+                    return iface.host_asset_interface.address;
+                }
+            }
+            return '';
+        }
+
+        // Function to update or initialize the hosts data table
+        function updateHostsTable() {
+            if (hostsTable) {
+                hostsTable.clear();
+                hostsTable.rows.add(hostData);
+                hostsTable.draw();
+            } else {
+                hostsTable = $('#hostsTable').DataTable({
+                    data: hostData,
+                    columns: [
+                        { data: 'hostname' },
+                        { data: 'ip' },
+                        { data: 'os' },
+                        { 
+                            data: 'last_seen',
+                            render: function(data) {
+                                return formatDate(data);
+                            }
+                        },
+                        { data: 'vulnerabilities' }
+                    ],
+                    pageLength: 25,
+                    lengthMenu: [10, 25, 50, 100, 500],
+                    order: [[0, 'asc']],
+                    responsive: true,
+                    dom: 'Bfrtip',
+                    buttons: [
+                        {
+                            text: 'Export CSV',
+                            className: 'export-button export-csv',
+                            action: function() {
+                                exportCSV();
+                            }
+                        }
+                    ]
+                });
+
+                // Add click event to table rows
+                $('#hostsTable tbody').on('click', 'tr', function() {
+                    const data = hostsTable.row(this).data();
+                    if (data) {
+                        showHostDetails(data);
+                    }
+                });
+            }
+        }
+
+        // Function to show host details in modal
+        function showHostDetails(tableData) {
+            // Find the full host object from rawHostData using the id
+            const host = findHostById(tableData._id);
+            
+            if (!host) {
+                console.error('Host not found:', tableData);
+                return;
+            }
+            
+            // Update modal title
+            document.getElementById('modalHostname').textContent = tableData.hostname;
+            
+            // Clear previous content
+            const contentDiv = document.getElementById('hostDetailsContent');
+            contentDiv.innerHTML = '';
+            
+            // Build the details sections
+            buildBasicInfoSection(contentDiv, host);
+            buildNetworkSection(contentDiv, host);
+            buildAccountsSection(contentDiv, host);
+            buildOpenPortsSection(contentDiv, host);
+            buildSoftwareSection(contentDiv, host);
+            buildVulnerabilitySection(contentDiv, host);
+            
+            // Add any additional details that might be present
+            if (host.metadata || host.tags || host.agent_info) {
+                buildMetadataSection(contentDiv, host);
+            }
+            
+            // Display the modal
+            document.getElementById('hostDetailsModal').style.display = 'block';
+        }
+
+        // Function to find a host by its ID from the raw host data
+        function findHostById(id) {
+            if (!id) return null;
+            
+            return rawHostData.find(host => {
+                return host.id === id || 
+                       host.device_id === id || 
+                       host.host_id === id;
+            });
+        }
+
+        // Functions to build each section of the host details modal
+        function buildBasicInfoSection(container, host) {
+            const section = document.createElement('div');
+            section.className = 'detail-section';
+            section.innerHTML = `
+                <h4>Basic Information</h4>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="detail-item">
+                            <span class="detail-label">Hostname:</span> 
+                            ${host.name || host.fqdn || host.dns_host_name || 'N/A'}
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">IP Address:</span> 
+                            ${host.address || extractFirstIP(host.network_interface) || 'N/A'}
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Operating System:</span> 
+                            ${host.os || 'N/A'}
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Last Seen:</span> 
+                            ${formatDate(host.last_seen || host.modified || host.agent_info?.last_checked_in)}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-item">
+                            <span class="detail-label">Host ID:</span> 
+                            ${host.id || host.device_id || host.host_id || 'N/A'}
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">MAC Address:</span> 
+                            ${getMacAddress(host) || 'N/A'}
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Created:</span> 
+                            ${formatDate(host.created) || 'N/A'}
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Status:</span> 
+                            ${host.status || 'Normal'}
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.appendChild(section);
+        }
+
+        function buildNetworkSection(container, host) {
+            const section = document.createElement('div');
+            section.className = 'detail-section';
+            section.innerHTML = '<h4>Network Information</h4>';
+            
+            if (host.network_interface && host.network_interface.list && host.network_interface.list.length > 0) {
+                const table = document.createElement('table');
+                table.className = 'nested-table';
+                table.innerHTML = `
+                    <thead>
+                        <tr>
+                            <th>Interface</th>
+                            <th>IP Address</th>
+                            <th>MAC Address</th>
+                            <th>Gateway</th>
+                            <th>Hostname</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${host.network_interface.list.map(iface => {
+                            const ni = iface.host_asset_interface || {};
+                            return `
+                                <tr>
+                                    <td>${ni.interface_name || 'N/A'}</td>
+                                    <td>${ni.address || 'N/A'}</td>
+                                    <td>${ni.mac_address || 'N/A'}</td>
+                                    <td>${ni.gateway_address || 'N/A'}</td>
+                                    <td>${ni.hostname || 'N/A'}</td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                `;
+                section.appendChild(table);
+            } else {
+                section.innerHTML += '<p>No network information available</p>';
+            }
+            
+            container.appendChild(section);
+        }
+
+        // New function to build the accounts section
+        function buildAccountsSection(container, host) {
+            const section = document.createElement('div');
+            section.className = 'detail-section';
+            section.innerHTML = '<h4>User Accounts</h4>';
+            
+            if (host.account && host.account.list && host.account.list.length > 0) {
+                const accountsDiv = document.createElement('div');
+                accountsDiv.className = 'accounts-container';
+                
+                // Extract just the usernames
+                const usernames = host.account.list
+                    .map(account => account.host_asset_account?.username)
+                    .filter(username => username); // Filter out undefined/null
+                
+                if (usernames.length > 0) {
+                    accountsDiv.innerHTML = `
+                        <div class="d-flex flex-wrap gap-2 mb-3">
+                            ${usernames.map(username => 
+                                `<span class="badge bg-info text-dark">${username}</span>`
+                            ).join('')}
+                        </div>
+                    `;
+                } else {
+                    accountsDiv.innerHTML = '<p>No user account information available</p>';
+                }
+                
+                section.appendChild(accountsDiv);
+            } else {
+                section.innerHTML += '<p>No user account information available</p>';
+            }
+            
+            container.appendChild(section);
+        }
+
+        function buildOpenPortsSection(container, host) {
+            const section = document.createElement('div');
+            section.className = 'detail-section';
+            section.innerHTML = '<h4>Open Ports</h4>';
+            
+            if (host.open_port && host.open_port.list && host.open_port.list.length > 0) {
+                const table = document.createElement('table');
+                table.className = 'nested-table';
+                table.innerHTML = `
+                    <thead>
+                        <tr>
+                            <th>Port</th>
+                            <th>Protocol</th>
+                            <th>Service</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${host.open_port.list.map(port => {
+                            const portInfo = port.host_asset_open_port || {};
+                            return `
+                                <tr>
+                                    <td>${portInfo.port || 'N/A'}</td>
+                                    <td>${portInfo.protocol || 'N/A'}</td>
+                                    <td>${portInfo.service_name || 'N/A'}</td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                `;
+                section.appendChild(table);
+            } else {
+                section.innerHTML += '<p>No open ports information available</p>';
+            }
+            
+            container.appendChild(section);
+        }
+
+        function buildSoftwareSection(container, host) {
+            const section = document.createElement('div');
+            section.className = 'detail-section';
+            section.innerHTML = '<h4>Installed Software</h4>';
+            
+            if (host.software && host.software.list && host.software.list.length > 0) {
+                const table = document.createElement('table');
+                table.className = 'nested-table';
+                
+                // Split the software list into visible and hidden parts
+                const visibleSoftware = host.software.list.slice(0, 20);
+                const hiddenSoftware = host.software.list.slice(20);
+                
+                table.innerHTML = `
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Version</th>
+                            <th>Installed On</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${visibleSoftware.map(sw => `
+                            <tr>
+                                <td>${sw.host_asset_software?.name || 'N/A'}</td>
+                                <td>${sw.host_asset_software?.version || 'N/A'}</td>
+                                <td>${formatDate(sw.host_asset_software?.install_date) || 'N/A'}</td>
+                            </tr>
+                        `).join('')}
+                        ${hiddenSoftware.map(sw => `
+                            <tr style="display: none;">
+                                <td>${sw.host_asset_software?.name || 'N/A'}</td>
+                                <td>${sw.host_asset_software?.version || 'N/A'}</td>
+                                <td>${formatDate(sw.host_asset_software?.install_date) || 'N/A'}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                `;
+                section.appendChild(table);
+
+                // Add Show More button if there are hidden rows
+                if (hiddenSoftware.length > 0) {
+                    const showMoreBtn = document.createElement('button');
+                    showMoreBtn.className = 'show-more-btn';
+                    showMoreBtn.textContent = 'Show More';
+                    showMoreBtn.onclick = function() {
+                        const hiddenRows = table.querySelectorAll('tbody tr:nth-child(n+21)');
+                        const isHidden = hiddenRows[0].style.display === 'none';
+                        hiddenRows.forEach(row => {
+                            row.style.display = isHidden ? '' : 'none';
+                        });
+                        showMoreBtn.textContent = isHidden ? 'Show Less' : 'Show More';
+                    };
+                    section.appendChild(showMoreBtn);
+                }
+            } else {
+                section.innerHTML += '<p>No software information available</p>';
+            }
+            
+            container.appendChild(section);
+        }
+
+        function buildVulnerabilitySection(container, host) {
+            const section = document.createElement('div');
+            section.className = 'detail-section';
+            section.innerHTML = '<h4>Vulnerabilities</h4>';
+            
+            if (host.vuln && host.vuln.list && host.vuln.list.length > 0) {
+                const table = document.createElement('table');
+                table.className = 'nested-table';
+                
+                // Split the vulnerabilities list into visible and hidden parts
+                const visibleVulns = host.vuln.list.slice(0, 20);
+                const hiddenVulns = host.vuln.list.slice(20);
+                
+                table.innerHTML = `
+                    <thead>
+                        <tr>
+                            <th>QID</th>
+                            <th>Instance ID</th>
+                            <th>First Found</th>
+                            <th>Last Found</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${visibleVulns.map(vuln => {
+                            const vulnInfo = vuln.host_asset_vuln || {};
+                            return `
+                                <tr>
+                                    <td>${vulnInfo.qid || 'N/A'}</td>
+                                    <td>${vulnInfo.host_instance_vuln_id || 'N/A'}</td>
+                                    <td>${formatDate(vulnInfo.first_found) || 'N/A'}</td>
+                                    <td>${formatDate(vulnInfo.last_found) || 'N/A'}</td>
+                                </tr>
+                            `;
+                        }).join('')}
+                        ${hiddenVulns.map(vuln => {
+                            const vulnInfo = vuln.host_asset_vuln || {};
+                            return `
+                                <tr style="display: none;">
+                                    <td>${vulnInfo.qid || 'N/A'}</td>
+                                    <td>${vulnInfo.host_instance_vuln_id || 'N/A'}</td>
+                                    <td>${formatDate(vulnInfo.first_found) || 'N/A'}</td>
+                                    <td>${formatDate(vulnInfo.last_found) || 'N/A'}</td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                `;
+                section.appendChild(table);
+
+                // Add Show More button if there are hidden rows
+                if (hiddenVulns.length > 0) {
+                    const showMoreBtn = document.createElement('button');
+                    showMoreBtn.className = 'show-more-btn';
+                    showMoreBtn.textContent = 'Show More';
+                    showMoreBtn.onclick = function() {
+                        const hiddenRows = table.querySelectorAll('tbody tr:nth-child(n+21)');
+                        const isHidden = hiddenRows[0].style.display === 'none';
+                        hiddenRows.forEach(row => {
+                            row.style.display = isHidden ? '' : 'none';
+                        });
+                        showMoreBtn.textContent = isHidden ? 'Show Less' : 'Show More';
+                    };
+                    section.appendChild(showMoreBtn);
+                }
+            } else {
+                section.innerHTML += '<p>No vulnerabilities detected</p>';
+            }
+            
+            container.appendChild(section);
+        }
+
+        function buildMetadataSection(container, host) {
+            const section = document.createElement('div');
+            section.className = 'detail-section';
+            section.innerHTML = '<h4>Additional Metadata</h4>';
+            
+            const metadataDiv = document.createElement('div');
+            metadataDiv.className = 'row';
+            
+            // Agent Info
+            if (host.agent_info) {
+                const agentDiv = document.createElement('div');
+                agentDiv.className = 'col-md-6';
+                agentDiv.innerHTML = `
+                    <div class="detail-item">
+                        <span class="detail-label">Agent Version:</span> 
+                        ${host.agent_info.agent_version || 'N/A'}
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Agent ID:</span> 
+                        ${host.agent_info.agent_id || 'N/A'}
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Last Check-in:</span> 
+                        ${formatDate(host.agent_info.last_checked_in) || 'N/A'}
+                    </div>
+                `;
+                metadataDiv.appendChild(agentDiv);
+            }
+            
+            // Tags
+            if (host.tags && host.tags.length) {
+                const tagsDiv = document.createElement('div');
+                tagsDiv.className = 'col-md-6';
+                tagsDiv.innerHTML = `
+                    <div class="detail-item">
+                        <span class="detail-label">Tags:</span> 
+                        <span class="badges-container">
+                            ${host.tags.map(tag => `<span class="badge bg-secondary me-1">${tag}</span>`).join('')}
+                        </span>
+                    </div>
+                `;
+                metadataDiv.appendChild(tagsDiv);
+            }
+            
+            section.appendChild(metadataDiv);
+            container.appendChild(section);
+        }
+
+        // Helper function to get MAC address from host
+        function getMacAddress(host) {
+            if (host.mac_address) return host.mac_address;
+            
+            if (host.network_interface && host.network_interface.list && host.network_interface.list.length > 0) {
+                for (const iface of host.network_interface.list) {
+                    if (iface.host_asset_interface && iface.host_asset_interface.mac_address) {
+                        return iface.host_asset_interface.mac_address;
+                    }
+                }
+            }
+            
+            return null;
+        }
+
+        // Function to export data as CSV
+        function exportCSV() {
+            const csv = [];
+            const headers = ['Hostname', 'IP Address', 'Operating System', 'Last Seen', 'Vulnerabilities'];
+            csv.push(headers.join(','));
+
+            hostData.forEach(host => {
+                const row = [
+                    '"' + (host.hostname || '').replace(/"/g, '""') + '"',
+                    '"' + (host.ip || '').replace(/"/g, '""') + '"',
+                    '"' + (host.os || '').replace(/"/g, '""') + '"',
+                    '"' + formatDate(host.last_seen) + '"',
+                    host.vulnerabilities || 0
+                ];
+                csv.push(row.join(','));
+            });
+
+            const csvString = csv.join('\n');
+            const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'host_data_' + new Date().toISOString().slice(0, 10) + '.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Function to load data with current filters
+        async function loadData() {
+            const data = await fetchData();
+            if (data) {
+                updateDashboard(data);
+            }
+        }
+
+        // Handle filter form submission
+        document.getElementById('filter-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            // Update current filters
+            currentFilters.os = document.getElementById('operating_system').value;
+            currentFilters.days = document.getElementById('days').value;
+            currentFilters.limit = document.getElementById('limit').value;
+            
+            // Reload data with new filters
+            loadData();
+        });
+
+        // Handle refresh button
+        document.getElementById('refreshData').addEventListener('click', function() {
+            loadData();
+        });
+
+        // Handle form reset
+        document.querySelector('button[type="reset"]').addEventListener('click', function() {
+            // Reset the form and current filters
+            document.getElementById('operating_system').value = '';
+            document.getElementById('days').value = '30';
+            document.getElementById('limit').value = '100';
+            
+            currentFilters = {
+                os: '',
+                days: 30,
+                limit: 100
+            };
+            
+            // Reload data with reset filters
+            loadData();
+        });
+
+        // Handle modal close button
+        document.getElementById('closeModal').addEventListener('click', function() {
+            document.getElementById('hostDetailsModal').style.display = 'none';
+        });
+
+        // Close modal when clicking outside of content
+        window.addEventListener('click', function(event) {
+            const modal = document.getElementById('hostDetailsModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+
+        // Initial load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadData();
+        });
+    </script>
+</body>
+
+</html>

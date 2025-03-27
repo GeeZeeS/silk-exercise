@@ -1,15 +1,23 @@
-import os
 import logging
 
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import ORJSONResponse, JSONResponse
+from fastapi.responses import (
+    ORJSONResponse,
+    JSONResponse,
+    HTMLResponse,
+    RedirectResponse,
+)
+from fastapi.templating import Jinja2Templates
+from fastapi import Request
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from api import router as api_router
 from core.config import settings
 from core.database import db_instance, get_database
 
+# Set up templates
+templates = Jinja2Templates(directory="templates")
 
 logging.basicConfig(
     level=logging.INFO if not settings.is_production else logging.WARNING,
@@ -71,6 +79,18 @@ async def health_check(db: AsyncIOMotorDatabase = Depends(get_database)):
                 "error": str(e),
             },
         )
+
+
+@app.get("/index.html", response_class=HTMLResponse, tags=["UI"])
+async def index(request: Request):
+    """Serve the index.html template"""
+    return templates.TemplateResponse("index.html", {"request": request})
+
+
+@app.get("/", tags=["UI"])
+async def root():
+    """Redirect to the index.html page"""
+    return RedirectResponse(url="/index.html")
 
 
 app.include_router(api_router, prefix="/api")
